@@ -8,6 +8,7 @@ export const GlobalStyle = createGlobalStyle`
     border-width: 0;
     border-style: solid;
     list-style: none;
+    line-height: 1.6;
   }
   :focus{
     outline: 0;
