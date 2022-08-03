@@ -14,7 +14,7 @@ export const HomeContainer = styled.main`
   }
 `
 
-export const TaskInfoContainer = styled.div`
+export const CycleInfoContainer = styled.div`
   width: 100%;
   display: flex;
   flex-wrap: wrap;

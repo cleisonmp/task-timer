@@ -5,13 +5,15 @@ import * as zod from 'zod'
 
 import {
   CountdownContainer,
-  TaskInfoContainer,
+  CycleInfoContainer,
   HomeContainer,
   Separator,
   StartCountdownButton,
   TaskInput,
   MinutesAmountInput,
 } from './styles'
+import { useEffect, useState } from 'react'
+import { differenceInSeconds } from 'date-fns'
 
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Task name is required.'),
@@ -22,7 +24,16 @@ const newCycleFormValidationSchema = zod.object({
 })
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 
+interface Cycle extends NewCycleFormData {
+  id: string
+  startDate: Date
+}
+
 export function Home() {
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [secondsPassedAmount, setSecondsPassedAmount] = useState(0)
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
@@ -34,14 +45,39 @@ export function Home() {
   // console.log(formState.errors.task?.message)
   // console.log(formState.errors.minutesAmount?.message)
 
-  function handleCreateNewTask(data: NewCycleFormData) {
+  const handleCreateNewTask = (data: NewCycleFormData) => {
+    const newCycleId = String(new Date().getTime())
+    const newCycle: Cycle = {
+      id: newCycleId,
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+      startDate: new Date(),
+    }
+    setCycles((state) => [...state, newCycle])
+    setActiveCycleId(newCycleId)
     reset()
   }
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+  const currentSeconds = activeCycle ? totalSeconds - secondsPassedAmount : 0
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  const secondAmount = currentSeconds % 60
+  const minutesToShow = String(minutesAmount).padStart(2, '0')
+  const secondsToShow = String(secondAmount).padStart(2, '0')
+
+  useEffect(() => {
+    if (activeCycle) {
+      setInterval(() => {
+        setSecondsPassedAmount(
+          differenceInSeconds(new Date(), activeCycle.startDate),
+        )
+      })
+    }
+  }, [activeCycle])
 
   return (
     <HomeContainer>
       <form onSubmit={handleSubmit(handleCreateNewTask)} action="">
-        <TaskInfoContainer>
+        <CycleInfoContainer>
           <label htmlFor="task">Working on</label>
           <TaskInput
             id="task"
@@ -69,14 +105,14 @@ export function Home() {
           />
 
           <span>minutes.</span>
-        </TaskInfoContainer>
+        </CycleInfoContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutesToShow[0]}</span>
+          <span>{minutesToShow[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{secondsToShow[0]}</span>
+          <span>{secondsToShow[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton type="submit" disabled={isSubmitDisabled}>
