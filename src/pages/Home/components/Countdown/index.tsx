@@ -25,25 +25,18 @@ export function Countdown({ resetForm }: CountdownProps) {
 
   useEffect(() => {
     let interval: number
-    console.log('useEffect - ' + activeCycle?.minutesAmount)
-    console.log('activeCycle.startDate - ' + activeCycle?.startDate)
 
     if (activeCycle) {
-      console.log('activeCycle')
       interval = setInterval(() => {
-        console.log('onterval')
         const secondsPassedOnCycle = differenceInSeconds(
           new Date(),
           activeCycle.startDate,
         )
         if (secondsPassedOnCycle >= totalSeconds) {
-          console.log('finshed')
-
           endCountdownTimer(totalSeconds)
           resetForm()
           clearInterval(interval)
         } else {
-          console.log('setSecondsPassedOnCycle - ' + secondsPassedOnCycle)
           setSecondsPassedOnCycle(secondsPassedOnCycle)
         }
       })
