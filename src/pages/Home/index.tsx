@@ -13,7 +13,7 @@ import {
   MinutesAmountInput,
   StopCountdownButton,
 } from './styles'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { differenceInSeconds } from 'date-fns'
 
 const newCycleFormValidationSchema = zod.object({
@@ -48,6 +48,27 @@ export function Home() {
   // console.log(formState.errors.task?.message)
   // console.log(formState.errors.minutesAmount?.message)
 
+  const endCountdownTimer = useCallback(
+    (reason: 'running' | 'completed' | 'interrupted', timeElapsed: number) => {
+      setCycles((cyclesState) =>
+        cyclesState.map((cycle) => {
+          if (cycle.id === activeCycleId) {
+            return {
+              ...cycle,
+              status: reason,
+              timeElapsed,
+            }
+          } else {
+            return cycle
+          }
+        }),
+      )
+      setActiveCycleId(null)
+      setSecondsPassedAmount(0)
+      reset()
+    },
+    [activeCycleId, reset],
+  )
   const handleCreateNewTask = (data: NewCycleFormData) => {
     const newCycleId = String(new Date().getTime())
     const newCycle: Cycle = {
@@ -63,22 +84,7 @@ export function Home() {
     // reset()
   }
   const handleStopCountdown = () => {
-    setCycles((cyclesState) =>
-      cyclesState.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          return {
-            ...cycle,
-            status: 'interrupted',
-            timeElapsed: secondsPassedAmount,
-          }
-        } else {
-          return cycle
-        }
-      }),
-    )
-    setActiveCycleId(null)
-    setSecondsPassedAmount(0)
-    reset()
+    endCountdownTimer('interrupted', secondsPassedAmount)
   }
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
   const currentSeconds = activeCycle ? totalSeconds - secondsPassedAmount : 0
@@ -92,22 +98,30 @@ export function Home() {
 
     if (activeCycle) {
       interval = setInterval(() => {
-        setSecondsPassedAmount(
-          differenceInSeconds(new Date(), activeCycle.startDate),
+        const secondsPassedOnCycle = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate,
         )
+        if (secondsPassedOnCycle >= totalSeconds) {
+          console.log('finshed')
+
+          endCountdownTimer('completed', totalSeconds)
+          clearInterval(interval)
+        } else {
+          setSecondsPassedAmount(secondsPassedOnCycle)
+        }
       })
     }
     return () => {
       clearInterval(interval)
     }
-  }, [activeCycle])
+  }, [activeCycle, totalSeconds, endCountdownTimer])
 
   useEffect(() => {
     if (activeCycle) {
       document.title = `${minutesToShow}: ${secondsToShow} - ${activeCycle.task}`
     }
   }, [minutesToShow, secondsToShow, activeCycle])
-  // {activeCycle ? <h1>Title</h1> : <h1>xx</h1>}
 
   return (
     <HomeContainer>
