@@ -1,4 +1,4 @@
-import { Play } from 'phosphor-react'
+import { HandPalm, Play } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
@@ -11,6 +11,7 @@ import {
   StartCountdownButton,
   TaskInput,
   MinutesAmountInput,
+  StopCountdownButton,
 } from './styles'
 import { useEffect, useState } from 'react'
 import { differenceInSeconds } from 'date-fns'
@@ -27,6 +28,8 @@ type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 interface Cycle extends NewCycleFormData {
   id: string
   startDate: Date
+  status: 'running' | 'completed' | 'interrupted'
+  timeElapsed?: number
 }
 
 export function Home() {
@@ -52,9 +55,29 @@ export function Home() {
       task: data.task,
       minutesAmount: data.minutesAmount,
       startDate: new Date(),
+      status: 'running',
     }
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(newCycleId)
+    setSecondsPassedAmount(0)
+    // reset()
+  }
+  const handleStopCountdown = () => {
+    setCycles((cyclesState) =>
+      cyclesState.map((cycle) => {
+        if (cycle.id === activeCycleId) {
+          return {
+            ...cycle,
+            status: 'interrupted',
+            timeElapsed: secondsPassedAmount,
+          }
+        } else {
+          return cycle
+        }
+      }),
+    )
+    setActiveCycleId(null)
+    setSecondsPassedAmount(0)
     reset()
   }
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
@@ -65,14 +88,26 @@ export function Home() {
   const secondsToShow = String(secondAmount).padStart(2, '0')
 
   useEffect(() => {
+    let interval: number
+
     if (activeCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         setSecondsPassedAmount(
           differenceInSeconds(new Date(), activeCycle.startDate),
         )
       })
     }
+    return () => {
+      clearInterval(interval)
+    }
   }, [activeCycle])
+
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutesToShow}: ${secondsToShow} - ${activeCycle.task}`
+    }
+  }, [minutesToShow, secondsToShow, activeCycle])
+  // {activeCycle ? <h1>Title</h1> : <h1>xx</h1>}
 
   return (
     <HomeContainer>
@@ -84,6 +119,7 @@ export function Home() {
             list="task-suggestions"
             placeholder="Give your project a name"
             {...register('task')}
+            disabled={!!activeCycle}
           />
           <datalist id="task-suggestions">
             <option value="Sugestão de nome de projeto 1"></option>
@@ -102,6 +138,7 @@ export function Home() {
             min={5}
             max={60}
             {...register('minutesAmount', { valueAsNumber: true })}
+            disabled={!!activeCycle}
           />
 
           <span>minutes.</span>
@@ -115,10 +152,17 @@ export function Home() {
           <span>{secondsToShow[1]}</span>
         </CountdownContainer>
 
-        <StartCountdownButton type="submit" disabled={isSubmitDisabled}>
-          <Play size={24} />
-          Start
-        </StartCountdownButton>
+        {activeCycle ? (
+          <StopCountdownButton type="button" onClick={handleStopCountdown}>
+            <HandPalm size={24} />
+            Stop
+          </StopCountdownButton>
+        ) : (
+          <StartCountdownButton type="submit" disabled={isSubmitDisabled}>
+            <Play size={24} />
+            Start
+          </StartCountdownButton>
+        )}
       </form>
     </HomeContainer>
   )
