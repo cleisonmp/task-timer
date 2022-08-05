@@ -1,6 +1,13 @@
+import { formatDistanceToNow } from 'date-fns'
+import { useContext } from 'react'
+import { CyclesContext } from '../../contexts/CyclesContext'
 import { HistoryContainer, HistoryList, TaskStatus } from './styles'
 
 export function History() {
+  const { cycles } = useContext(CyclesContext)
+
+  document.title = 'Timer - History'
+
   return (
     <HistoryContainer>
       <h1>My History</h1>
@@ -15,30 +22,33 @@ export function History() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Task</td>
-              <td>30 minutes</td>
-              <td>2 months ago</td>
-              <td>
-                <TaskStatus taskStatus="completed">Finished</TaskStatus>
-              </td>
-            </tr>
-            <tr>
-              <td>Task</td>
-              <td>30 minutes</td>
-              <td>2 months ago</td>
-              <td>
-                <TaskStatus taskStatus="interrupted">interrupted</TaskStatus>
-              </td>
-            </tr>
-            <tr>
-              <td>Task</td>
-              <td>30 minutes</td>
-              <td>2 months ago</td>
-              <td>
-                <TaskStatus taskStatus="running">running</TaskStatus>
-              </td>
-            </tr>
+            {cycles.map((cycle, index) => {
+              const wasTaskCompleted =
+                cycle.taskTimeElapsed === cycle.minutesAmount * 60
+
+              return (
+                <tr key={String(new Date()) + index}>
+                  <td>{cycle.task}</td>
+                  <td>{cycle.minutesAmount} minutes</td>
+                  <td>
+                    {formatDistanceToNow(cycle.startDate, { addSuffix: true })}
+                  </td>
+                  <td>
+                    {cycle.taskTimeElapsed ? (
+                      <TaskStatus
+                        taskStatus={
+                          wasTaskCompleted ? 'completed' : 'interrupted'
+                        }
+                      >
+                        {wasTaskCompleted ? 'Finished' : 'Interrupted'}
+                      </TaskStatus>
+                    ) : (
+                      <TaskStatus taskStatus="running">Running</TaskStatus>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </HistoryList>

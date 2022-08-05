@@ -10,8 +10,7 @@ interface Cycle {
   task: string
   minutesAmount: number
   startDate: Date
-  interruptedDate?: Date
-  finishedDate?: Date
+  taskTimeElapsed?: number
 }
 
 interface CyclesContextInfo {
@@ -54,6 +53,7 @@ export function CyclesContextProvider({
         }
       }),
     )
+
     setActiveCycleId(null)
     setSecondsPassedAmount(0)
   }
@@ -68,7 +68,6 @@ export function CyclesContextProvider({
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(newCycleId)
     setSecondsPassedAmount(0)
-    // reset()
   }
 
   const setSecondsPassedOnCycle = (seconds: number) => {
