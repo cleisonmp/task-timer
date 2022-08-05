@@ -30,7 +30,7 @@ export function Countdown({ resetForm }: CountdownProps) {
       interval = setInterval(() => {
         const secondsPassedOnCycle = differenceInSeconds(
           new Date(),
-          activeCycle.startDate,
+          new Date(activeCycle.startDate),
         )
         if (secondsPassedOnCycle >= totalSeconds) {
           endCountdownTimer(totalSeconds)
