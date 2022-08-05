@@ -5,6 +5,7 @@ import { HistoryContainer, HistoryList, TaskStatus } from './styles'
 
 export function History() {
   const { cycles } = useContext(CyclesContext)
+  const cyclesToShow = [...cycles].reverse()
 
   document.title = 'Timer - History'
 
@@ -22,7 +23,7 @@ export function History() {
             </tr>
           </thead>
           <tbody>
-            {cycles.map((cycle, index) => {
+            {cyclesToShow.map((cycle, index) => {
               const isTaskRunning = cycle.taskTimeElapsed === undefined
               const wasTaskCompleted =
                 cycle.taskTimeElapsed === cycle.minutesAmount * 60

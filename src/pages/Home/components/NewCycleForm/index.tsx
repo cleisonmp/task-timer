@@ -5,8 +5,11 @@ import { useFormContext } from 'react-hook-form'
 import { CyclesContext } from '../../../../contexts/CyclesContext'
 
 export function NewCycleForm() {
-  const { activeCycle } = useContext(CyclesContext)
+  const { cycles, activeCycle } = useContext(CyclesContext)
   const { register } = useFormContext()
+  const suggestionsList = [
+    ...new Set(cycles.map((cycle) => cycle.task)),
+  ].reverse()
 
   return (
     <CycleInfoContainer>
@@ -19,10 +22,9 @@ export function NewCycleForm() {
         disabled={!!activeCycle}
       />
       <datalist id="task-suggestions">
-        <option value="Sugestão de nome de projeto 1"></option>
-        <option value="Sugestão de nome de projeto 2"></option>
-        <option value="Sugestão de nome de projeto 4"></option>
-        <option value="Sugestão de nome de projeto 5"></option>
+        {suggestionsList.map((suggestion, index) => {
+          return <option key={index} value={suggestion} />
+        })}
       </datalist>
 
       <label htmlFor="minutesAmount">for</label>
