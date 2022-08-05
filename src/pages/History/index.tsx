@@ -23,6 +23,7 @@ export function History() {
           </thead>
           <tbody>
             {cycles.map((cycle, index) => {
+              const isTaskRunning = cycle.taskTimeElapsed === undefined
               const wasTaskCompleted =
                 cycle.taskTimeElapsed === cycle.minutesAmount * 60
 
@@ -34,7 +35,9 @@ export function History() {
                     {formatDistanceToNow(cycle.startDate, { addSuffix: true })}
                   </td>
                   <td>
-                    {cycle.taskTimeElapsed ? (
+                    {isTaskRunning ? (
+                      <TaskStatus taskStatus="running">Running</TaskStatus>
+                    ) : (
                       <TaskStatus
                         taskStatus={
                           wasTaskCompleted ? 'completed' : 'interrupted'
@@ -42,8 +45,6 @@ export function History() {
                       >
                         {wasTaskCompleted ? 'Finished' : 'Interrupted'}
                       </TaskStatus>
-                    ) : (
-                      <TaskStatus taskStatus="running">Running</TaskStatus>
                     )}
                   </td>
                 </tr>
